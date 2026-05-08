@@ -1,117 +1,208 @@
 @extends('layouts.app')
-@section('title', 'Admin Dashboard')
-@section('page-title', 'Admin Dashboard')
+@section('title', 'Dashboard')
+@section('page-title', 'Dashboard')
 
 @section('content')
+@include('layouts.partials.alert')
 
-<!-- Stats Grid -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-  <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <p class="text-xs text-gray-500 mb-1">Total Users</p>
-    <p class="text-2xl font-medium text-gray-100">{{ $stats['total_users'] }}</p>
-    <p class="text-xs mt-1 text-indigo-400">All registered users</p>
-  </div>
-  <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <p class="text-xs text-gray-500 mb-1">Total Roles</p>
-    <p class="text-2xl font-medium text-gray-100">{{ $stats['total_roles'] }}</p>
-    <p class="text-xs mt-1 text-teal-400">Permission groups</p>
-  </div>
-  <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <p class="text-xs text-gray-500 mb-1">Admins</p>
-    <p class="text-2xl font-medium text-gray-100">{{ $stats['admins'] }}</p>
-    <p class="text-xs mt-1 text-amber-400">Full access users</p>
-  </div>
-  <div class="bg-gray-900 border border-gray-800 rounded-xl p-4">
-    <p class="text-xs text-gray-500 mb-1">Managers</p>
-    <p class="text-2xl font-medium text-gray-100">{{ $stats['managers'] }}</p>
-    <p class="text-xs mt-1 text-rose-400">Manager role users</p>
+@php
+  $hour = (int) now()->format('H');
+
+    if ($hour >= 5 && $hour < 12) {
+        $greeting = 'Good morning';
+    } elseif ($hour >= 12 && $hour < 17) {
+        $greeting = 'Good afternoon';
+    } elseif ($hour >= 17 && $hour < 21) {
+        $greeting = 'Good evening';
+    } else {
+        $greeting = 'Good night';
+    }
+    
+    $authUser = auth()->user()->load('designation', 'department', 'function');
+@endphp
+
+<!-- Greeting -->
+<div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800
+            rounded-xl p-6 mb-6">
+  <div class="flex items-center gap-4">
+    <div class="w-14 h-14 rounded-full bg-indigo-600 flex items-center justify-center
+                text-xl font-semibold text-white flex-shrink-0">
+      {{ strtoupper(substr($authUser->name, 0, 2)) }}
+    </div>
+    <div>
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        {{ $greeting }}, {{ explode(' ', $authUser->name)[0] }}!
+      </h2>
+      <p class="text-sm text-gray-500 dark:text-gray-500 mt-0.5">
+        {{ now()->format('l, F j, Y') }}
+      </p>
+      <div class="flex items-center gap-2 mt-1.5">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs
+                     bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600
+                     dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+          {{ $authUser->designation?->name ?? '—' }}
+        </span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-xs text-gray-500 dark:text-gray-600">Employee ID:</span>
+        <span class="text-xs font-mono font-medium text-indigo-600 dark:text-indigo-400">
+          {{ $authUser->employee_id ?? '—' }}
+        </span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-xs text-gray-500 dark:text-gray-600">Department:</span>
+        <span class="text-xs font-mono font-medium text-indigo-600 dark:text-indigo-400">
+          {{ $authUser->department?->name ?? '—' }}
+        </span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-xs text-gray-500 dark:text-gray-600">Function:</span>
+        <span class="text-xs font-mono font-medium text-indigo-600 dark:text-indigo-400">
+          {{ $authUser->function?->name ?? '—' }}
+        </span>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Recent Users + Quick Actions -->
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-  <!-- Recent Users -->
-  <div class="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-sm font-medium text-gray-300">Recent Users</h3>
-      <a href="{{ route('users.index') }}"
-         class="text-xs text-indigo-400 hover:text-indigo-300 transition-colors">
-        View all →
-      </a>
-    </div>
-    <div class="space-y-3">
-      @foreach($recentUsers as $user)
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center
-                    text-xs font-medium text-white flex-shrink-0">
-          {{ strtoupper(substr($user->name, 0, 2)) }}
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-sm text-gray-300 font-medium truncate">{{ $user->name }}</p>
-          <p class="text-xs text-gray-600 truncate">{{ $user->email }}</p>
-        </div>
-        <div class="flex items-center gap-2">
-          @foreach($user->roles as $role)
-            @php
-              $colors = [
-                'admin'   => 'bg-indigo-900/50 text-indigo-400 border-indigo-800',
-                'manager' => 'bg-amber-900/50 text-amber-400 border-amber-800',
-                'user'    => 'bg-gray-800 text-gray-400 border-gray-700',
-              ];
-              $color = $colors[$role->name] ?? 'bg-gray-800 text-gray-400 border-gray-700';
-            @endphp
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs border {{ $color }}">
-              {{ ucfirst($role->name) }}
-            </span>
-          @endforeach
-          <span class="text-xs text-gray-600">{{ $user->created_at->diffForHumans() }}</span>
-        </div>
-      </div>
-      @endforeach
-    </div>
+<!-- Stats -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800
+              rounded-xl p-4 text-center">
+    <p class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $stats['total_users'] }}</p>
+    <p class="text-xs text-gray-500 mt-1">Total Users</p>
   </div>
-
-  <!-- Quick Actions -->
-  <div class="bg-gray-900 border border-gray-800 rounded-xl p-5">
-    <h3 class="text-sm font-medium text-gray-300 mb-4">Quick Actions</h3>
-    <div class="space-y-2">
-      <a href="{{ route('users.create') }}"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800/60
-                hover:bg-gray-800 transition-colors group">
-        <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center flex-shrink-0">
-          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-          </svg>
-        </div>
-        <span class="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">Add New User</span>
-      </a>
-      <a href="{{ route('roles.create') }}"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800/60
-                hover:bg-gray-800 transition-colors group">
-        <div class="w-7 h-7 rounded-lg bg-teal-600 flex items-center justify-center flex-shrink-0">
-          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955
-                     11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824
-                     10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-          </svg>
-        </div>
-        <span class="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">Create Role</span>
-      </a>
-      <a href="{{ route('profile.edit') }}"
-         class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-gray-800/60
-                hover:bg-gray-800 transition-colors group">
-        <div class="w-7 h-7 rounded-lg bg-amber-600 flex items-center justify-center flex-shrink-0">
-          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
-        </div>
-        <span class="text-sm text-gray-400 group-hover:text-gray-200 transition-colors">Edit Profile</span>
-      </a>
-    </div>
+  <div class="bg-white dark:bg-gray-900 border border-amber-200 dark:border-amber-900/40
+              rounded-xl p-4 text-center">
+    <p class="text-2xl font-semibold text-amber-500">{{ $stats['pending'] }}</p>
+    <p class="text-xs text-gray-500 mt-1">Pending Reviews</p>
   </div>
+  <div class="bg-white dark:bg-gray-900 border border-emerald-200 dark:border-emerald-900/40
+              rounded-xl p-4 text-center">
+    <p class="text-2xl font-semibold text-emerald-500">{{ $stats['approved'] }}</p>
+    <p class="text-xs text-gray-500 mt-1">Approved</p>
+  </div>
+  <div class="bg-white dark:bg-gray-900 border border-rose-200 dark:border-rose-900/40
+              rounded-xl p-4 text-center">
+    <p class="text-2xl font-semibold text-rose-500">{{ $stats['rejected'] }}</p>
+    <p class="text-xs text-gray-500 mt-1">Rejected</p>
+  </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+  <a href="{{ route('manager.dashboard') }}"
+     class="flex items-center gap-4 bg-white dark:bg-gray-900 border border-gray-200
+            dark:border-gray-800 rounded-xl p-5 hover:border-amber-300
+            dark:hover:border-amber-700 hover:shadow-sm transition-all group">
+    <div class="w-11 h-11 rounded-xl bg-amber-500 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-900 dark:text-gray-200
+                group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+        Review Submissions
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-600 mt-0.5">
+        {{ $stats['pending'] }} pending entries
+      </p>
+    </div>
+  </a>
+
+  <a href="{{ route('entries.table') }}"
+     class="flex items-center gap-4 bg-white dark:bg-gray-900 border border-gray-200
+            dark:border-gray-800 rounded-xl p-5 hover:border-blue-300
+            dark:hover:border-blue-700 hover:shadow-sm transition-all group">
+    <div class="w-11 h-11 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 10h18M3 14h18M10 3v18M14 3v18"/>
+      </svg>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-900 dark:text-gray-200
+                group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+        All Entries Datatable
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-600 mt-0.5">Filter and search all entries</p>
+    </div>
+  </a>
+
+  <a href="{{ route('users.index') }}"
+     class="flex items-center gap-4 bg-white dark:bg-gray-900 border border-gray-200
+            dark:border-gray-800 rounded-xl p-5 hover:border-indigo-300
+            dark:hover:border-indigo-700 hover:shadow-sm transition-all group">
+    <div class="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857
+                 M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857
+                 m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-900 dark:text-gray-200
+                group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+        Manage Users
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-600 mt-0.5">
+        {{ $stats['total_users'] }} registered users
+      </p>
+    </div>
+  </a>
+
+  <a href="{{ route('profile.edit') }}"
+     class="flex items-center gap-4 bg-white dark:bg-gray-900 border border-gray-200
+            dark:border-gray-800 rounded-xl p-5 hover:border-teal-300
+            dark:hover:border-teal-700 hover:shadow-sm transition-all group">
+    <div class="w-11 h-11 rounded-xl bg-teal-600 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+      </svg>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-900 dark:text-gray-200
+                group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+        My Profile
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-600 mt-0.5">Update account settings</p>
+    </div>
+  </a>
+  <!-- Only show deletion requests button if there are pending requests -->
+  @php $pendingDeletions = \App\Models\DeletionRequest::where('status','pending')->count(); @endphp
+  @if($pendingDeletions > 0)
+  <a href="{{ route('deletion-requests.index') }}"
+    class="flex items-center gap-4 bg-white dark:bg-gray-900 border border-rose-200
+            dark:border-rose-900/50 rounded-xl p-5 hover:border-rose-300
+            dark:hover:border-rose-700 hover:shadow-sm transition-all group">
+    <div class="w-11 h-11 rounded-xl bg-rose-600 flex items-center justify-center
+                flex-shrink-0 relative">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5
+                7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+      </svg>
+      <span class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-amber-500 text-white
+                  text-xs rounded-full flex items-center justify-center font-medium">
+        {{ $pendingDeletions }}
+      </span>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-900 dark:text-gray-200
+                group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+        Deletion Requests
+      </p>
+      <p class="text-xs text-gray-500 dark:text-gray-600 mt-0.5">
+        {{ $pendingDeletions }} pending approval
+      </p>
+    </div>
+  </a>
+@endif
 
 </div>
 

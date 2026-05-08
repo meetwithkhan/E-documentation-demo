@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-primary:    #ffffff;
+    --bg-secondary:  #f9fafb;
+    --bg-card:       #ffffff;
+    --border-color:  #e5e7eb;
+    --text-primary:  #111827;
+    --text-secondary:#6b7280;
+    --text-muted:    #9ca3af;
+  }
+
+  .dark {
+    --bg-primary:    #0f1117;
+    --bg-secondary:  #1a1d27;
+    --bg-card:       #1a1d27;
+    --border-color:  #2a2d3e;
+    --text-primary:  #e2e8f0;
+    --text-secondary:#9ca3af;
+    --text-muted:    #6b7280;
+  }
+}

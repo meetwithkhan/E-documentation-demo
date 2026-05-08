@@ -27,5 +27,7 @@
     </div>
   @endif
 
-  <span class="text-white font-medium {{ $sz['text'] }}">{{ $name }}</span>
+   <span class="font-medium {{ $sz['text'] }} text-gray-900 dark:text-white">
+    {{ $name }}
+  </span>
 </div>

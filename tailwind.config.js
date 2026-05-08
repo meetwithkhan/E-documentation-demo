@@ -9,12 +9,8 @@ export default {
         './resources/views/**/*.blade.php',
         './resources/js/**/*.js',
     ],
-    theme: {
-        extend: {
-            fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-            },
-        },
-    },
+    theme: { extend: {
+        fontFamily: { sans: ['Figtree', ...defaultTheme.fontFamily.sans] },
+    }},
     plugins: [forms],
 };

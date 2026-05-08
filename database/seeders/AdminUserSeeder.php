@@ -9,18 +9,24 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::create([
-            'name'     => 'Admin',
-            'email'    => 'admin@example.com',
-            'password' => bcrypt('password'),
-        ]);
-        $admin->assignRole('admin');
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'employee_id' => User::generateEmployeeId(),
+                'name'        => 'Admin',
+                'password'    => bcrypt('password'),
+            ]
+        );
+        $admin->syncRoles(['admin']);
 
-        $manager = User::create([
-            'name'     => 'Manager',
-            'email'    => 'manager@example.com',
-            'password' => bcrypt('password'),
-        ]);
-        $manager->assignRole('manager');
+        $manager = User::firstOrCreate(
+            ['email' => 'manager@example.com'],
+            [
+                'employee_id' => User::generateEmployeeId(),
+                'name'        => 'Manager',
+                'password'    => bcrypt('password'),
+            ]
+        );
+        $manager->syncRoles(['manager']);
     }
 }
